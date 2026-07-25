@@ -2,13 +2,10 @@ import { useEffect, useRef } from 'react'
 
 const COLORS = { fastest: '#2563eb', cheapest: '#16a34a', greenest: '#059669' }
 
-export default function RouteMap({ result, selected, cities }) {
+export default function RouteMap({ result, selected }) {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const layersRef = useRef({})
-
-  const cityIndex = {}
-  cities.forEach(c => { cityIndex[c.id] = c })
 
   useEffect(() => {
     if (!window.L) return
@@ -33,28 +30,26 @@ export default function RouteMap({ result, selected, cities }) {
       const color = COLORS[type]
       const latlngs = []
       route.segments.forEach(seg => {
-        const f = cityIndex[seg.from]
-        const t = cityIndex[seg.to]
-        if (f) latlngs.push([f.lat, f.lon])
-        if (t) latlngs.push([t.lat, t.lon])
-        if (f) allLatLngs.push([f.lat, f.lon])
-        if (t) allLatLngs.push([t.lat, t.lon])
+        if (seg.from_lat != null) latlngs.push([seg.from_lat, seg.from_lon])
+        if (seg.to_lat != null) latlngs.push([seg.to_lat, seg.to_lon])
+        if (seg.from_lat != null) allLatLngs.push([seg.from_lat, seg.from_lon])
+        if (seg.to_lat != null) allLatLngs.push([seg.to_lat, seg.to_lon])
       })
 
       const layer = L.layerGroup()
       L.polyline(latlngs, { color, weight: 4, opacity: 0.7 }).addTo(layer)
 
       route.segments.forEach((seg, i) => {
-        if (i === 0) {
-          const c = cityIndex[seg.from]
-          if (c) L.circleMarker([c.lat, c.lon], { radius: 8, color: 'white', fillColor: color, fillOpacity: 1, weight: 2 })
+        if (i === 0 && seg.from_lat != null) {
+          L.circleMarker([seg.from_lat, seg.from_lon], { radius: 8, color: 'white', fillColor: color, fillOpacity: 1, weight: 2 })
             .addTo(layer).bindPopup(seg.from_name)
         }
-        const c = cityIndex[seg.to]
-        if (c) L.circleMarker([c.lat, c.lon], {
-          radius: i === route.segments.length - 1 ? 9 : 6,
-          color: 'white', fillColor: color, fillOpacity: 0.9, weight: 2,
-        }).addTo(layer).bindPopup(seg.to_name)
+        if (seg.to_lat != null) {
+          L.circleMarker([seg.to_lat, seg.to_lon], {
+            radius: i === route.segments.length - 1 ? 9 : 6,
+            color: 'white', fillColor: color, fillOpacity: 0.9, weight: 2,
+          }).addTo(layer).bindPopup(seg.to_name)
+        }
       })
 
       layersRef.current[type] = layer
@@ -62,7 +57,6 @@ export default function RouteMap({ result, selected, cities }) {
 
     if (allLatLngs.length) map.fitBounds(allLatLngs, { padding: [30, 30] })
 
-    // Show selected route
     if (layersRef.current[selected]) {
       layersRef.current[selected].addTo(map)
     }
@@ -75,7 +69,6 @@ export default function RouteMap({ result, selected, cities }) {
     }
   }, [result])
 
-  // Swap visible layer when selection changes
   useEffect(() => {
     const map = mapInstanceRef.current
     if (!map || !window.L) return

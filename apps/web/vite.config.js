@@ -3,6 +3,14 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    assetsInlineLimit: 1024 * 1024 * 10, // inline all assets into HTML
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: false,
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

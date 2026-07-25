@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { saveOnboarding } from '../api'
+import CityAutocomplete from './CityAutocomplete'
 
 const STYLES = [
   { value: 'fast',     label: '⚡ Speed first',    desc: 'Minimize travel time, regardless of cost' },
@@ -14,8 +15,21 @@ const SENSITIVITY = [
   { value: 'high',   label: 'High — I offset or avoid flying' },
 ]
 
-export default function OnboardingModal({ cities, onClose, onComplete }) {
+const BASE = import.meta.env.VITE_API_URL || '/api'
+
+async function snapToNearestSlug(lat, lon) {
+  try {
+    const res = await fetch(`${BASE}/snap?lat=${lat}&lon=${lon}`)
+    const data = await res.json()
+    return data.slug || null
+  } catch {
+    return null
+  }
+}
+
+export default function OnboardingModal({ onClose, onComplete }) {
   const [step, setStep] = useState(0)
+  const [homeCity, setHomeCity] = useState(null) // { name, country, lat, lon }
   const [form, setForm] = useState({
     email: '',
     home_city: '',
@@ -31,15 +45,22 @@ export default function OnboardingModal({ cities, onClose, onComplete }) {
     setSaving(true)
     setError(null)
     try {
-      await saveOnboarding(form)
-      localStorage.setItem('routeiq_prefs', JSON.stringify(form))
-      onComplete(form)
+      let slug = form.home_city
+      if (homeCity && !slug) {
+        slug = await snapToNearestSlug(homeCity.lat, homeCity.lon)
+      }
+      const payload = { ...form, home_city: slug || 'paris' }
+      await saveOnboarding(payload)
+      localStorage.setItem('routeiq_prefs', JSON.stringify({ ...payload, home_city_display: homeCity?.name }))
+      onComplete(payload)
     } catch (e) {
       setError(e.message)
     } finally {
       setSaving(false)
     }
   }
+
+  const canProceedStep0 = form.email && homeCity
 
   return (
     <div style={overlay}>
@@ -78,16 +99,15 @@ export default function OnboardingModal({ cities, onClose, onComplete }) {
             </div>
             <div>
               <label style={labelStyle}>Home city</label>
-              <select value={form.home_city} onChange={e => set('home_city', e.target.value)} style={inputStyle}>
-                <option value="">Select your city…</option>
-                {cities.map(c => (
-                  <option key={c.id} value={c.id}>{c.name} ({c.country})</option>
-                ))}
-              </select>
+              <CityAutocomplete
+                value={homeCity}
+                onChange={setHomeCity}
+                placeholder="Type your home city…"
+              />
             </div>
             <button
-              style={{ ...primaryBtn, opacity: form.email && form.home_city ? 1 : 0.5 }}
-              disabled={!form.email || !form.home_city}
+              style={{ ...primaryBtn, opacity: canProceedStep0 ? 1 : 0.5, cursor: canProceedStep0 ? 'pointer' : 'not-allowed' }}
+              disabled={!canProceedStep0}
               onClick={() => setStep(1)}
             >
               Next →
@@ -136,7 +156,7 @@ export default function OnboardingModal({ cities, onClose, onComplete }) {
             {error && <p style={{ color: '#ef4444', fontSize: '.85rem' }}>{error}</p>}
             <div style={{ display: 'flex', gap: '.75rem', marginTop: '.5rem' }}>
               <button style={secondaryBtn} onClick={() => setStep(1)}>← Back</button>
-              <button style={{ ...primaryBtn, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={finish}>
+              <button style={{ ...primaryBtn, opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }} disabled={saving} onClick={finish}>
                 {saving ? 'Saving…' : 'Get started ✓'}
               </button>
             </div>
@@ -157,12 +177,12 @@ const modal = {
 }
 const closeBtn = {
   position: 'absolute', top: '1rem', right: '1rem', background: 'none',
-  border: 'none', fontSize: '1.1rem', color: '#94a3b8', padding: '.25rem',
+  border: 'none', fontSize: '1.1rem', color: '#94a3b8', padding: '.25rem', cursor: 'pointer',
 }
 const stepDots = { display: 'flex', gap: '.5rem', marginBottom: '1rem' }
 const dot = { width: 8, height: 8, borderRadius: '50%', transition: 'background .2s' }
 const labelStyle = { display: 'block', fontSize: '.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', color: '#64748b', marginBottom: '.4rem' }
-const inputStyle = { width: '100%', padding: '.65rem .9rem', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '.95rem', color: '#1e293b', background: 'white', outline: 'none' }
+const inputStyle = { width: '100%', padding: '.65rem .9rem', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '.95rem', color: '#1e293b', background: 'white', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }
 const primaryBtn = { flex: 1, padding: '.7rem 1.5rem', background: 'linear-gradient(135deg,#2563eb,#0ea5e9)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '.95rem' }
-const secondaryBtn = { padding: '.7rem 1.2rem', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '.95rem' }
+const secondaryBtn = { padding: '.7rem 1.2rem', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '.95rem', cursor: 'pointer' }
 const optionCard = { padding: '.85rem 1rem', borderRadius: '10px', cursor: 'pointer', transition: 'border .15s, background .15s' }
