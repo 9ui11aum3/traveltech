@@ -175,8 +175,6 @@ class UserPreferences(BaseModel):
 @app.post("/onboarding", status_code=201)
 def onboarding(prefs: UserPreferences):
     """Save user travel preferences."""
-    if prefs.home_city not in CITIES:
-        raise HTTPException(status_code=400, detail="unknown_home_city")
     if prefs.travel_style not in {"fast", "cheap", "green", "balanced"}:
         raise HTTPException(status_code=400, detail="invalid_travel_style")
     if prefs.carbon_sensitivity not in {"low", "medium", "high"}:
