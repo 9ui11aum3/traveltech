@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RouteIQ – Multimodal Travel Intelligence</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh}
+/* Header */
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#0ea5e9 100%);padding:1.5rem 2rem;display:flex;align-items:center;gap:1rem}
+.logo{display:flex;align-items:center;gap:.75rem}
+.logo-icon{width:44px;height:44px;background:rgba(255,255,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;border:1px solid rgba(255,255,255,0.2)}
+.logo-text h1{font-size:1.6rem;font-weight:800;letter-spacing:-.5px;color:white}
+.logo-text p{font-size:.8rem;opacity:.75;color:white}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:1rem}
+.pref-badge{color:rgba(255,255,255,.75);font-size:.85rem;display:none}
+.pref-btn{padding:.5rem 1rem;background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.25);border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer}
+/* Search */
+.search-panel{background:white;padding:1.5rem 2rem;border-bottom:1px solid #e2e8f0;box-shadow:0 2px 4px rgba(0,0,0,.05)}
+.search-form{display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;max-width:900px;margin:0 auto}
+.field{display:flex;flex-direction:column;gap:.4rem;flex:1;min-width:150px}
+.field label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#64748b}
+.field select,.field input{padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.95rem;color:#1e293b;background:white;transition:border-color .2s;font-family:inherit}
+.field select:focus,.field input:focus{outline:none;border-color:#3b82f6}
+.search-btn{padding:.65rem 1.8rem;background:linear-gradient(135deg,#2563eb,#0ea5e9);color:white;border:none;border-radius:8px;font-size:.95rem;font-weight:600;cursor:pointer;white-space:nowrap;min-width:130px}
+.search-btn:disabled{opacity:.6;cursor:not-allowed}
+/* Container */
+.container{max-width:1100px;margin:0 auto;padding:1.5rem 1rem}
+.results-header{font-size:.8rem;color:#64748b;margin-bottom:.75rem;font-weight:500}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem}
+/* Route cards */
+.route-card{background:white;border-radius:14px;border:1.5px solid #e2e8f0;overflow:hidden;cursor:pointer;transition:box-shadow .2s,border .15s}
+.route-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.route-card.selected-fastest{border-color:#2563eb;box-shadow:0 0 0 3px #2563eb22}
+.route-card.selected-cheapest{border-color:#16a34a;box-shadow:0 0 0 3px #16a34a22}
+.route-card.selected-greenest{border-color:#059669;box-shadow:0 0 0 3px #05966922}
+.card-header{padding:.85rem 1.1rem;display:flex;align-items:center;gap:.6rem}
+.card-header.fastest{background:#eff6ff}
+.card-header.cheapest{background:#f0fdf4}
+.card-header.greenest{background:#ecfdf5}
+.badge{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:white}
+.badge.fastest{background:#2563eb}
+.badge.cheapest{background:#16a34a}
+.badge.greenest{background:#059669}
+.card-title{font-weight:700;font-size:1rem}
+.card-sub{font-size:.75rem;color:#64748b}
+.card-stats{display:flex;border-top:1px solid #f1f5f9}
+.stat{flex:1;padding:.65rem .4rem;text-align:center;border-right:1px solid #f1f5f9}
+.stat:last-child{border-right:none}
+.stat-val{font-size:1rem;font-weight:700;color:#1e293b}
+.stat-val.hi-fastest{color:#2563eb}
+.stat-val.hi-cheapest{color:#16a34a}
+.stat-val.hi-greenest{color:#059669}
+.stat-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-top:1px}
+.segments{padding:.75rem 1.1rem;border-top:1px solid #f1f5f9}
+.segment{display:flex;align-items:center;gap:.5rem;padding:.3rem 0;border-bottom:1px dashed #f1f5f9;font-size:.82rem}
+.segment:last-child{border-bottom:none}
+.seg-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
+.seg-icon.train{background:#dbeafe;color:#1d4ed8}
+.seg-icon.bus{background:#fef9c3;color:#a16207}
+.seg-icon.plane{background:#fce7f3;color:#be185d}
+.seg-info{flex:1}
+.seg-route{font-weight:600;color:#334155;font-size:.85rem}
+.seg-meta{color:#94a3b8;font-size:.75rem}
+.seg-stats{text-align:right;font-size:.75rem;color:#64748b;flex-shrink:0}
+/* CO2 chart */
+.co2-bar{background:white;border-radius:14px;border:1.5px solid #e2e8f0;padding:1.2rem 1.5rem;margin-bottom:1.5rem}
+.co2-bar h3{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-bottom:1rem}
+.co2-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}
+.co2-label{font-size:.8rem;width:150px;flex-shrink:0;color:#475569;font-weight:500}
+.co2-track{flex:1;height:12px;background:#f1f5f9;border-radius:99px;overflow:hidden}
+.co2-fill{height:100%;border-radius:99px;transition:width 1s ease}
+.co2-value{font-size:.8rem;font-weight:600;width:60px;text-align:right;color:#334155}
+/* Map */
+.map-section{background:white;border-radius:14px;border:1.5px solid #e2e8f0;overflow:hidden;margin-bottom:1.5rem}
+.map-title{padding:.9rem 1.2rem;font-weight:600;font-size:.9rem;border-bottom:1px solid #f1f5f9;color:#475569}
+#map{height:360px}
+/* Empty/loading states */
+.empty-state{text-align:center;padding:4rem 2rem;color:#94a3b8}
+.empty-state .icon{font-size:3rem;margin-bottom:1rem}
+.error-box{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;color:#b91c1c;margin-bottom:1rem}
+/* Onboarding modal */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:white;border-radius:16px;padding:2rem;width:100%;max-width:440px;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.1rem;color:#94a3b8;cursor:pointer}
+.step-dots{display:flex;gap:.5rem;margin-bottom:1rem}
+.step-dot{width:8px;height:8px;border-radius:50%;transition:background .2s}
+.modal h2{font-size:1.3rem;font-weight:700;margin-bottom:.25rem}
+.modal .sub{color:#64748b;font-size:.9rem;margin-bottom:1.5rem}
+.form-group{margin-bottom:1rem}
+.form-label{display:block;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-bottom:.4rem}
+.form-input{width:100%;padding:.65rem .9rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.95rem;color:#1e293b;background:white;font-family:inherit}
+.option-card{padding:.85rem 1rem;border-radius:10px;cursor:pointer;border:1.5px solid #e2e8f0;margin-bottom:.75rem;transition:border .15s,background .15s}
+.option-card.selected-blue{border:2px solid #2563eb;background:#eff6ff}
+.option-card.selected-green{border:2px solid #059669;background:#ecfdf5}
+.opt-title{font-weight:600;font-size:.9rem}
+.opt-desc{font-size:.8rem;color:#64748b;margin-top:2px}
+.btn-row{display:flex;gap:.75rem;margin-top:1rem}
+.btn-primary{flex:1;padding:.7rem 1.5rem;background:linear-gradient(135deg,#2563eb,#0ea5e9);color:white;border:none;border-radius:8px;font-weight:600;font-size:.95rem;cursor:pointer}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.btn-secondary{padding:.7rem 1.2rem;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-weight:600;font-size:.95rem;cursor:pointer}
+/* Footer */
+footer{text-align:center;padding:1.5rem;font-size:.75rem;color:#94a3b8;border-top:1px solid #e2e8f0;background:white;margin-top:1rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🗺️</div>
+    <div class="logo-text">
+      <h1>RouteIQ</h1>
+      <p>Multimodal Intelligence</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="pref-badge" id="pref-badge"></span>
+    <button class="pref-btn" onclick="openOnboarding()">⚙️ Preferences</button>
+  </div>
+</header>
+
+<div class="search-panel">
+  <div class="search-form">
+    <div class="field">
+      <label>From</label>
+      <select id="from" onchange="clearResults()">
+        <option value="">Select origin…</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>To</label>
+      <select id="to" onchange="clearResults()">
+        <option value="">Select destination…</option>
+      </select>
+    </div>
+    <div class="field" style="min-width:130px;max-width:160px">
+      <label>Date</label>
+      <input type="date" id="tdate" />
+    </div>
+    <button class="search-btn" id="search-btn" onclick="search()">🔍 Find Routes</button>
+  </div>
+</div>
+
+<div class="container">
+  <div id="results">
+    <div class="empty-state">
+      <div class="icon">🚄</div>
+      <p>Select origin and destination to compare routes across Europe</p>
+    </div>
+  </div>
+</div>
+
+<footer>RouteIQ Prototype · Open data · <a href="https://github.com/9ui11aum3/traveltech" style="color:#94a3b8">GitHub</a> · For investor demonstration</footer>
+
+<!-- Onboarding Modal -->
+<div class="overlay" id="onboarding-overlay" style="display:none">
+  <div class="modal">
+    <button class="modal-close" onclick="closeOnboarding()">✕</button>
+    <div class="step-dots" id="step-dots"></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+const API = 'https://routeiq-api.app.syit.fr'
+const MODE_ICON = {train:'🚄', bus:'🚌', plane:'✈️'}
+const COLORS = {fastest:'#2563eb', cheapest:'#16a34a', greenest:'#059669'}
+
+let cities = []
+let selectedRoute = 'fastest'
+let currentResult = null
+let prefs = null
+
+function fmtDur(m){if(m<60)return m+'min';return Math.floor(m/60)+'h'+(m%60?' '+(m%60)+'m':'')}
+function fmtPrice(e){return '€'+Math.round(e)}
+function fmtCo2(kg){return kg<1?(kg*1000).toFixed(0)+'g':kg.toFixed(1)+'kg'}
+function haversine(lat1,lon1,lat2,lon2){const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))}
+
+// ── Init ──────────────────────────────────────────────────────────────
+async function init() {
+  // Load cities
+  try {
+    const res = await fetch(API + '/cities')
+    cities = await res.json()
+    const opts = cities.map(c => `<option value="${c.id}">${c.name} (${c.country})</option>`).join('')
+    document.getElementById('from').innerHTML = '<option value="">Select origin…</option>' + opts
+    document.getElementById('to').innerHTML   = '<option value="">Select destination…</option>' + opts
+  } catch(e) {
+    console.error('Failed to load cities:', e)
+  }
+
+  // Date default
+  const d = new Date(); d.setDate(d.getDate()+1)
+  document.getElementById('tdate').value = d.toISOString().split('T')[0]
+
+  // Preferences
+  try { prefs = JSON.parse(localStorage.getItem('routeiq_prefs') || 'null') } catch{}
+  if (prefs) {
+    applyPrefs(prefs)
+  } else {
+    openOnboarding()
+  }
+}
+
+function applyPrefs(p) {
+  prefs = p
+  const badge = document.getElementById('pref-badge')
+  if (p.home_city) {
+    badge.textContent = '👤 ' + p.home_city
+    badge.style.display = 'inline'
+    const fromSel = document.getElementById('from')
+    if (fromSel && !fromSel.value) fromSel.value = p.home_city
+  }
+}
+
+// ── Search ────────────────────────────────────────────────────────────
+async function search() {
+  const from = document.getElementById('from').value
+  const to   = document.getElementById('to').value
+  if (!from || !to) { alert('Please select both origin and destination.'); return }
+  if (from === to) { alert('Origin and destination must be different.'); return }
+
+  const btn = document.getElementById('search-btn')
+  btn.disabled = true; btn.textContent = '…'
+
+  clearResults()
+  try {
+    const res = await fetch(`${API}/routes?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
+    if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Search failed') }
+    const data = await res.json()
+    currentResult = data
+    renderResults(data)
+  } catch(e) {
+    document.getElementById('results').innerHTML = `<div class="error-box">⚠️ ${e.message}</div>`
+  } finally {
+    btn.disabled = false; btn.textContent = '🔍 Find Routes'
+  }
+}
+
+function clearResults() {
+  document.getElementById('results').innerHTML = `<div class="empty-state"><div class="icon">🚄</div><p>Select origin and destination to compare routes across Europe</p></div>`
+  if (window._map) { window._map.remove(); window._map = null }
+}
+
+// ── Render ────────────────────────────────────────────────────────────
+function renderResults(data) {
+  const {routes, origin_name, destination_name} = data
+  const date = document.getElementById('tdate').value
+  const dateStr = date ? new Date(date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : ''
+
+  let html = `<div class="results-header">${origin_name} → ${destination_name}${dateStr?' · '+dateStr:''} · 3 route options</div>`
+  html += '<div class="results-grid">'
+
+  const types = [
+    {key:'fastest',  icon:'⚡', label:'Fastest',  hiCls:'hi-fastest'},
+    {key:'cheapest', icon:'💰', label:'Cheapest', hiCls:'hi-cheapest'},
+    {key:'greenest', icon:'🌿', label:'Greenest', hiCls:'hi-greenest'},
+  ]
+
+  types.forEach(({key, icon, label, hiCls}) => {
+    const route = routes[key]
+    if (!route) {
+      html += `<div class="route-card"><div style="padding:2rem;text-align:center;color:#94a3b8">No ${label.toLowerCase()} route found</div></div>`
+      return
+    }
+    const {total_duration, total_price, total_co2, transfers, segments} = route
+    const selCls = selectedRoute === key ? `selected-${key}` : ''
+    html += `<div class="route-card ${selCls}" id="card-${key}" onclick="selectCard('${key}')">
+      <div class="card-header ${key}">
+        <div class="badge ${key}">${icon}</div>
+        <div><div class="card-title">${label} Route</div>
+        <div class="card-sub">${transfers===0?'Direct':transfers+' transfer'+(transfers>1?'s':'')}</div></div>
+      </div>
+      <div class="card-stats">
+        <div class="stat"><div class="stat-val${key==='fastest'?' '+hiCls:''}">${fmtDur(total_duration)}</div><div class="stat-lbl">Duration</div></div>
+        <div class="stat"><div class="stat-val${key==='cheapest'?' '+hiCls:''}">${fmtPrice(total_price)}</div><div class="stat-lbl">Cost</div></div>
+        <div class="stat"><div class="stat-val${key==='greenest'?' '+hiCls:''}">${fmtCo2(total_co2)}</div><div class="stat-lbl">CO₂</div></div>
+      </div>
+      <div class="segments">`
+    segments.forEach(seg => {
+      html += `<div class="segment">
+        <div class="seg-icon ${seg.mode}">${MODE_ICON[seg.mode]}</div>
+        <div class="seg-info">
+          <div class="seg-route">${seg.from_name} → ${seg.to_name}</div>
+          <div class="seg-meta">${seg.operator}</div>
+        </div>
+        <div class="seg-stats">${fmtDur(seg.duration)}<br>${fmtPrice(seg.price)}</div>
+      </div>`
+    })
+    html += `</div></div>`
+  })
+  html += '</div>'
+
+  // CO2 chart
+  const originCity = cities.find(c => c.id === data.origin)
+  const destCity   = cities.find(c => c.id === data.destination)
+  const distKm = (originCity && destCity) ? haversine(originCity.lat, originCity.lon, destCity.lat, destCity.lon) : 0
+  const carCo2 = distKm * 0.12, planeCo2 = distKm * 0.255
+  const bars = []
+  if (routes.fastest)  bars.push({label:'⚡ Fastest',  co2:routes.fastest.total_co2,  color:'#2563eb'})
+  if (routes.cheapest && routes.cheapest.total_co2 !== routes.fastest?.total_co2) bars.push({label:'💰 Cheapest',co2:routes.cheapest.total_co2,color:'#16a34a'})
+  if (routes.greenest && routes.greenest.total_co2 !== routes.fastest?.total_co2 && routes.greenest.total_co2 !== routes.cheapest?.total_co2) bars.push({label:'🌿 Greenest',co2:routes.greenest.total_co2,color:'#059669'})
+  if (distKm>0) { bars.push({label:'🚗 Car (est.)',co2:carCo2,color:'#f59e0b'}); bars.push({label:'✈️ Flight (est.)',co2:planeCo2,color:'#ef4444'}) }
+  const maxCo2 = Math.max(...bars.map(b=>b.co2))
+  html += `<div class="co2-bar"><h3>🌍 Carbon Footprint Comparison</h3>`
+  bars.forEach(b => {
+    const pct = maxCo2>0 ? Math.max(2,(b.co2/maxCo2)*100) : 0
+    html += `<div class="co2-row"><div class="co2-label">${b.label}</div><div class="co2-track"><div class="co2-fill" style="width:${pct}%;background:${b.color}"></div></div><div class="co2-value">${fmtCo2(b.co2)}</div></div>`
+  })
+  html += '</div>'
+
+  // Map
+  html += `<div class="map-section"><div class="map-title">🗺️ Route map — click a route card to highlight it</div><div id="map"></div></div>`
+
+  document.getElementById('results').innerHTML = html
+  initMap(data, routes)
+}
+
+function selectCard(type) {
+  selectedRoute = type
+  document.querySelectorAll('.route-card').forEach(c => {
+    c.className = 'route-card'
+  })
+  const card = document.getElementById('card-' + type)
+  if (card) card.classList.add('selected-' + type)
+  updateMapLayer(type)
+}
+
+// ── Map ───────────────────────────────────────────────────────────────
+let mapLayers = {}
+
+function initMap(data, routes) {
+  if (window._map) window._map.remove()
+  const map = L.map('map')
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:10}).addTo(map)
+  window._map = map
+
+  const cityIndex = {}
+  cities.forEach(c => { cityIndex[c.id] = c })
+  mapLayers = {}
+  const allLL = []
+
+  Object.entries(routes).forEach(([type, route]) => {
+    if (!route) return
+    const color = COLORS[type]
+    const latlngs = []
+    route.segments.forEach(seg => {
+      const f=cityIndex[seg.from], t=cityIndex[seg.to]
+      if(f) latlngs.push([f.lat,f.lon])
+      if(t) latlngs.push([t.lat,t.lon])
+      if(f) allLL.push([f.lat,f.lon])
+      if(t) allLL.push([t.lat,t.lon])
+    })
+    const layer = L.layerGroup()
+    L.polyline(latlngs,{color,weight:4,opacity:.7}).addTo(layer)
+    route.segments.forEach((seg,i) => {
+      if(i===0){const c=cityIndex[seg.from];if(c)L.circleMarker([c.lat,c.lon],{radius:8,color:'white',fillColor:color,fillOpacity:1,weight:2}).addTo(layer).bindPopup(seg.from_name)}
+      const c=cityIndex[seg.to];if(c)L.circleMarker([c.lat,c.lon],{radius:i===route.segments.length-1?9:6,color:'white',fillColor:color,fillOpacity:.9,weight:2}).addTo(layer).bindPopup(seg.to_name)
+    })
+    mapLayers[type] = layer
+  })
+
+  if (allLL.length) map.fitBounds(allLL, {padding:[30,30]})
+  updateMapLayer(selectedRoute)
+}
+
+function updateMapLayer(type) {
+  if (!window._map) return
+  Object.entries(mapLayers).forEach(([t,l]) => {
+    if (t===type) l.addTo(window._map); else l.remove()
+  })
+}
+
+// ── Onboarding ────────────────────────────────────────────────────────
+let onbStep = 0
+const STYLES = [
+  {v:'fast',    l:'⚡ Speed first',   d:'Minimize travel time'},
+  {v:'cheap',   l:'💰 Budget travel', d:'Find the lowest-cost option'},
+  {v:'green',   l:'🌿 Low carbon',    d:'Minimize CO₂ footprint'},
+  {v:'balanced',l:'⚖️ Balanced',      d:'Smart trade-off across all factors'},
+]
+const SENS = [
+  {v:'low',    l:'Low — cost matters most'},
+  {v:'medium', l:'Medium — I care but flexibility matters'},
+  {v:'high',   l:'High — I offset or avoid flying'},
+]
+let onbForm = {email:'', home_city:'', travel_style:'balanced', carbon_sensitivity:'medium'}
+
+function openOnboarding() {
+  onbStep = 0
+  onbForm = {email:'', home_city:'', travel_style:'balanced', carbon_sensitivity:'medium'}
+  renderOnboarding()
+  document.getElementById('onboarding-overlay').style.display = 'flex'
+}
+function closeOnboarding() {
+  document.getElementById('onboarding-overlay').style.display = 'none'
+}
+
+function renderOnboarding() {
+  const dots = document.getElementById('step-dots')
+  dots.innerHTML = [0,1,2].map(i => `<div class="step-dot" style="background:${i===onbStep?'#2563eb':'#e2e8f0'}"></div>`).join('')
+
+  const TITLES = ['Welcome to RouteIQ', 'Your travel style', 'Carbon sensitivity']
+  const SUBS = [
+    'Set up your preferences for smarter route recommendations.',
+    'How do you prioritise when choosing a route?',
+    'How important is reducing your carbon footprint?'
+  ]
+
+  let html = `<h2>${TITLES[onbStep]}</h2><p class="sub">${SUBS[onbStep]}</p>`
+
+  if (onbStep === 0) {
+    const cityOpts = cities.map(c => `<option value="${c.id}"${onbForm.home_city===c.id?' selected':''}>${c.name} (${c.country})</option>`).join('')
+    html += `
+      <div class="form-group"><label class="form-label">Email address</label>
+        <input class="form-input" type="email" value="${onbForm.email}" oninput="onbForm.email=this.value" placeholder="you@example.com"/></div>
+      <div class="form-group"><label class="form-label">Home city</label>
+        <select class="form-input" onchange="onbForm.home_city=this.value">
+          <option value="">Select your city…</option>${cityOpts}
+        </select></div>
+      <div class="btn-row"><button class="btn-primary" onclick="onbNext()" ${!onbForm.email||!onbForm.home_city?'disabled':''}>Next →</button></div>`
+  } else if (onbStep === 1) {
+    html += STYLES.map(s => `
+      <div class="option-card${onbForm.travel_style===s.v?' selected-blue':''}" onclick="onbForm.travel_style='${s.v}';renderOnboarding()">
+        <div class="opt-title">${s.l}</div><div class="opt-desc">${s.d}</div>
+      </div>`).join('')
+    html += `<div class="btn-row"><button class="btn-secondary" onclick="onbStep=0;renderOnboarding()">← Back</button><button class="btn-primary" onclick="onbNext()">Next →</button></div>`
+  } else {
+    html += SENS.map(s => `
+      <div class="option-card${onbForm.carbon_sensitivity===s.v?' selected-green':''}" onclick="onbForm.carbon_sensitivity='${s.v}';renderOnboarding()">
+        <div class="opt-title">${s.l}</div>
+      </div>`).join('')
+    html += `<div id="onb-error" style="color:#ef4444;font-size:.85rem;display:none"></div>
+      <div class="btn-row"><button class="btn-secondary" onclick="onbStep=1;renderOnboarding()">← Back</button>
+      <button class="btn-primary" id="onb-finish-btn" onclick="onbFinish()">Get started ✓</button></div>`
+  }
+
+  document.getElementById('modal-content').innerHTML = html
+}
+
+function onbNext() {
+  if (onbStep === 0 && (!onbForm.email || !onbForm.home_city)) return
+  onbStep++
+  renderOnboarding()
+}
+
+async function onbFinish() {
+  const btn = document.getElementById('onb-finish-btn')
+  const err = document.getElementById('onb-error')
+  btn.disabled = true; btn.textContent = 'Saving…'
+  err.style.display = 'none'
+
+  try {
+    const res = await fetch(API + '/onboarding', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(onbForm)
+    })
+    if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Save failed') }
+    localStorage.setItem('routeiq_prefs', JSON.stringify(onbForm))
+    applyPrefs(onbForm)
+    closeOnboarding()
+  } catch(e) {
+    err.textContent = e.message
+    err.style.display = 'block'
+    btn.disabled = false; btn.textContent = 'Get started ✓'
+  }
+}
+
+init()
+</script>
+</body>
+</html>
