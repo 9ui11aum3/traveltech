@@ -35,6 +35,7 @@ header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#0ea5e9 100%);pa
 .container{max-width:1100px;margin:0 auto;padding:1.5rem 1rem}
 .results-header{font-size:.8rem;color:#64748b;margin-bottom:.75rem;font-weight:500}
 .last-mile{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:.6rem 1rem;font-size:.82rem;color:#92400e;margin-bottom:.5rem}
+.hub-warning{background:#fff7ed;border:2px solid #f97316;border-radius:10px;padding:.85rem 1.1rem;font-size:.88rem;color:#7c2d12;margin-bottom:.75rem;line-height:1.5}
 .results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem}
 .route-card{background:white;border-radius:14px;border:1.5px solid #e2e8f0;overflow:hidden;cursor:pointer;transition:box-shadow .2s,border .15s}
 .route-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1)}
@@ -346,6 +347,17 @@ async function search() {
     return
   }
 
+  // Reject destinations too far from any known network node — prevents silent fallback to wrong city
+  const MAX_SNAP_KM = 80
+  if (fromSnap.dist > MAX_SNAP_KM) {
+    document.getElementById('results').innerHTML = `<div class="error-box">⚠️ <strong>${fromCity.name}</strong> is not yet in our route network. Nearest hub: <strong>${fromSnap.city.name}</strong> (${Math.round(fromSnap.dist)} km away). Try departing from ${fromSnap.city.name}.</div>`
+    return
+  }
+  if (toSnap.dist > MAX_SNAP_KM) {
+    document.getElementById('results').innerHTML = `<div class="error-box">⚠️ <strong>${toCity.name}</strong> is not yet in our route network. Nearest hub: <strong>${toSnap.city.name}</strong> (${Math.round(toSnap.dist)} km away). Try searching to ${toSnap.city.name}.</div>`
+    return
+  }
+
   const btn = document.getElementById('search-btn')
   btn.disabled = true; btn.textContent = '…'
   clearResults()
@@ -398,13 +410,26 @@ function renderResults(data) {
   const date = document.getElementById('tdate').value
   const dateStr = date ? new Date(date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : ''
 
-  let html = `<div class="results-header">${origin_name} → ${destination_name}${dateStr?' · '+dateStr:''} · 3 route options compared</div>`
+  // Detect hub fallback: API routed to a hub city instead of the actual destination
+  const destHub = data.destination_hub || (last_mile_destination && last_mile_destination.city)
+  const isHubFallback = destHub && destHub.toLowerCase() !== destination_name.toLowerCase()
+  const originHub = data.origin_hub || (last_mile_origin && last_mile_origin.city)
+  const isOriginHubFallback = originHub && originHub.toLowerCase() !== origin_name.toLowerCase()
 
-  if (data.last_mile_origin) {
-    html += `<div class="last-mile">📍 <strong>Departure:</strong> ${data.last_mile_origin.note}</div>`
-  }
-  if (data.last_mile_destination) {
-    html += `<div class="last-mile">📍 <strong>Arrival:</strong> ${data.last_mile_destination.note}</div>`
+  const headerDest = isHubFallback ? `${destination_name} <span style="font-weight:400;color:#f97316">(transit hub: ${destHub})</span>` : destination_name
+  let html = `<div class="results-header">${origin_name} → ${headerDest}${dateStr?' · '+dateStr:''} · 3 route options compared</div>`
+
+  // Hub fallback warning — prominent, before route cards
+  if (isHubFallback) {
+    const distKm = last_mile_destination && last_mile_destination.distance_km ? Math.round(last_mile_destination.distance_km) : null
+    html += `<div class="hub-warning">⚠️ <strong>No direct transit to ${destination_name}</strong> — our network currently reaches <strong>${destHub}</strong>${distKm ? ` (~${distKm} km from ${destination_name})` : ''}. Routes below show transit to ${destHub}. For the final leg to ${destination_name}, use local transport, car hire, or taxi.</div>`
+  } else {
+    if (last_mile_origin) {
+      html += `<div class="last-mile">📍 <strong>Departure:</strong> ${last_mile_origin.note}</div>`
+    }
+    if (last_mile_destination) {
+      html += `<div class="last-mile">📍 <strong>Arrival:</strong> ${last_mile_destination.note}</div>`
+    }
   }
 
   html += '<div class="results-grid">'
@@ -443,8 +468,8 @@ function renderResults(data) {
         <div class="seg-stats">${fmtDur(seg.duration)}<br>${fmtPrice(seg.price)}</div>
       </div>`
     })
-    const bk = getBookingInfo(segments, origin_name||'', destination_name||'')
-    html += `</div><a class="book-btn" href="${bk.url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Book on ${bk.label} ↗</a></div>`
+    const bk = getBookingInfo(segments, origin_name||'', destination_name||'', date)
+    html += `</div><div style="padding:.4rem 1.1rem .1rem;font-size:.7rem;color:#94a3b8;text-align:center">~ Prices estimated from typical schedules</div><a class="book-btn" href="${bk.url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🎫 Book with ${bk.label} — see live fares ↗</a></div>`
   })
   html += '</div>'
 
@@ -679,13 +704,33 @@ async function onbFinish() {
   }
 }
 
-function getBookingInfo(segments, fromName, toName) {
+function getBookingInfo(segments, fromName, toName, date) {
   const modes = (segments||[]).map(s=>s.mode)
   const primary = modes.includes('plane')?'plane':modes.includes('train')?'train':'bus'
+  const op = (segments&&segments[0]) ? (segments[0].operator||'').toLowerCase() : ''
   const slug = s => (s||'').split(',')[0].trim().toLowerCase().replace(/[\s/]+/g,'-').replace(/[^a-z0-9-]/g,'')
-  if (primary==='train') return {label:'Trainline', url:`https://www.trainline.eu/search/${slug(fromName)}/${slug(toName)}`}
-  if (primary==='bus')   return {label:'FlixBus',   url:'https://global.flixbus.com'}
-  return {label:'Google Flights', url:'https://www.google.com/travel/flights'}
+  const from = slug(fromName), to = slug(toName)
+  const dFlixbus = date ? date.split('-').reverse().join('.') : ''
+  const enc = s => encodeURIComponent((s||'').split(',')[0].trim())
+
+  if (primary==='train') {
+    if (op.includes('eurostar'))
+      return {label:'Eurostar', url:`https://www.eurostar.com/uk-en/train?lang=en&from=${enc(fromName)}&to=${enc(toName)}&departure=${date||''}`}
+    if (op.includes('ouigo'))
+      return {label:'Ouigo', url:'https://www.ouigo.com/en/'}
+    if (op.includes('sncf')||op.includes('tgv')||op.includes('ter')||op.includes('intercit'))
+      return {label:'SNCF Connect', url:`https://www.sncf-connect.com/app/home/search?origin=${enc(fromName)}&destination=${enc(toName)}&outwardDate=${date||''}`}
+    return {label:'Trainline', url:`https://www.trainline.eu/search/${from}/${to}${date?'?date='+date:''}`}
+  }
+  if (primary==='bus') {
+    if (op.includes('flix'))
+      return {label:'Flixbus', url:`https://shop.flixbus.com/search?from=${enc(fromName)}&to=${enc(toName)}${dFlixbus?'&departure_date='+dFlixbus:''}`}
+    if (op.includes('blabla'))
+      return {label:'BlaBlaCar Bus', url:`https://www.blablacar.fr/bus/search?fn=${enc(fromName)}&tn=${enc(toName)}${date?'&db='+date:''}&pn=1`}
+    return {label:'Flixbus', url:`https://global.flixbus.com`}
+  }
+  // Flight
+  return {label:'Skyscanner', url:`https://www.skyscanner.fr/transport/vols/${enc(fromName)}/${enc(toName)}/${date?date.replace(/-/g,'').substring(2):''}/`}
 }
 
 init()
