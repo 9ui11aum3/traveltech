@@ -86,6 +86,8 @@ header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#0ea5e9 100%);pa
 .btn-primary{flex:1;padding:.7rem 1.5rem;background:linear-gradient(135deg,#2563eb,#0ea5e9);color:white;border:none;border-radius:8px;font-weight:600;font-size:.95rem;cursor:pointer}
 .btn-primary:disabled{opacity:.6;cursor:not-allowed}
 .btn-secondary{padding:.7rem 1.2rem;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-weight:600;font-size:.95rem;cursor:pointer}
+.book-btn{display:block;margin:.6rem 1.1rem .85rem;padding:.55rem 1rem;background:linear-gradient(135deg,#2563eb,#0ea5e9);color:white;border:none;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;text-decoration:none;text-align:center;transition:opacity .15s}
+.book-btn:hover{opacity:.88}
 footer{text-align:center;padding:1.5rem;font-size:.75rem;color:#94a3b8;border-top:1px solid #e2e8f0;background:white;margin-top:1rem}
 </style>
 </head>
@@ -441,7 +443,8 @@ function renderResults(data) {
         <div class="seg-stats">${fmtDur(seg.duration)}<br>${fmtPrice(seg.price)}</div>
       </div>`
     })
-    html += `</div></div>`
+    const bk = getBookingInfo(segments, origin_name||'', destination_name||'')
+    html += `</div><a class="book-btn" href="${bk.url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Book on ${bk.label} ↗</a></div>`
   })
   html += '</div>'
 
@@ -674,6 +677,15 @@ async function onbFinish() {
     err.textContent=e.message; err.style.display='block'
     btn.disabled=false; btn.textContent='Get started ✓'
   }
+}
+
+function getBookingInfo(segments, fromName, toName) {
+  const modes = (segments||[]).map(s=>s.mode)
+  const primary = modes.includes('plane')?'plane':modes.includes('train')?'train':'bus'
+  const slug = s => (s||'').split(',')[0].trim().toLowerCase().replace(/[\s/]+/g,'-').replace(/[^a-z0-9-]/g,'')
+  if (primary==='train') return {label:'Trainline', url:`https://www.trainline.eu/search/${slug(fromName)}/${slug(toName)}`}
+  if (primary==='bus')   return {label:'FlixBus',   url:'https://global.flixbus.com'}
+  return {label:'Google Flights', url:'https://www.google.com/travel/flights'}
 }
 
 init()
