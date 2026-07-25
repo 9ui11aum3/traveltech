@@ -9,7 +9,6 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh}
-/* Header */
 header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#0ea5e9 100%);padding:1.5rem 2rem;display:flex;align-items:center;gap:1rem}
 .logo{display:flex;align-items:center;gap:.75rem}
 .logo-icon{width:44px;height:44px;background:rgba(255,255,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;border:1px solid rgba(255,255,255,0.2)}
@@ -18,55 +17,47 @@ header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#0ea5e9 100%);pa
 .header-right{margin-left:auto;display:flex;align-items:center;gap:1rem}
 .pref-badge{color:rgba(255,255,255,.75);font-size:.85rem;display:none}
 .pref-btn{padding:.5rem 1rem;background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.25);border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer}
-/* Search */
 .search-panel{background:white;padding:1.5rem 2rem;border-bottom:1px solid #e2e8f0;box-shadow:0 2px 4px rgba(0,0,0,.05)}
-.search-form{display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;max-width:900px;margin:0 auto}
-.field{display:flex;flex-direction:column;gap:.4rem;flex:1;min-width:150px}
+.search-form{display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;max-width:960px;margin:0 auto}
+.field{display:flex;flex-direction:column;gap:.4rem;flex:1;min-width:180px;position:relative}
 .field label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#64748b}
-.field select,.field input{padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.95rem;color:#1e293b;background:white;transition:border-color .2s;font-family:inherit}
-.field select:focus,.field input:focus{outline:none;border-color:#3b82f6}
+.field input{padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.95rem;color:#1e293b;background:white;transition:border-color .2s;font-family:inherit;width:100%}
+.field input:focus{outline:none;border-color:#3b82f6}
+.ac-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:9999;list-style:none;padding:4px 0;max-height:220px;overflow-y:auto;display:none}
+.ac-dropdown.open{display:block}
+.ac-item{padding:.5rem .9rem;cursor:pointer;font-size:.9rem;border-bottom:1px solid #f1f5f9}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover,.ac-item.active{background:#f8fafc}
+.ac-item strong{color:#1e293b}
+.ac-item span{color:#94a3b8;font-size:.82rem}
 .search-btn{padding:.65rem 1.8rem;background:linear-gradient(135deg,#2563eb,#0ea5e9);color:white;border:none;border-radius:8px;font-size:.95rem;font-weight:600;cursor:pointer;white-space:nowrap;min-width:130px}
 .search-btn:disabled{opacity:.6;cursor:not-allowed}
-/* Container */
 .container{max-width:1100px;margin:0 auto;padding:1.5rem 1rem}
 .results-header{font-size:.8rem;color:#64748b;margin-bottom:.75rem;font-weight:500}
+.last-mile{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:.6rem 1rem;font-size:.82rem;color:#92400e;margin-bottom:.5rem}
 .results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem}
-/* Route cards */
 .route-card{background:white;border-radius:14px;border:1.5px solid #e2e8f0;overflow:hidden;cursor:pointer;transition:box-shadow .2s,border .15s}
 .route-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1)}
 .route-card.selected-fastest{border-color:#2563eb;box-shadow:0 0 0 3px #2563eb22}
 .route-card.selected-cheapest{border-color:#16a34a;box-shadow:0 0 0 3px #16a34a22}
 .route-card.selected-greenest{border-color:#059669;box-shadow:0 0 0 3px #05966922}
 .card-header{padding:.85rem 1.1rem;display:flex;align-items:center;gap:.6rem}
-.card-header.fastest{background:#eff6ff}
-.card-header.cheapest{background:#f0fdf4}
-.card-header.greenest{background:#ecfdf5}
+.card-header.fastest{background:#eff6ff}.card-header.cheapest{background:#f0fdf4}.card-header.greenest{background:#ecfdf5}
 .badge{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:white}
-.badge.fastest{background:#2563eb}
-.badge.cheapest{background:#16a34a}
-.badge.greenest{background:#059669}
-.card-title{font-weight:700;font-size:1rem}
-.card-sub{font-size:.75rem;color:#64748b}
+.badge.fastest{background:#2563eb}.badge.cheapest{background:#16a34a}.badge.greenest{background:#059669}
+.card-title{font-weight:700;font-size:1rem}.card-sub{font-size:.75rem;color:#64748b}
 .card-stats{display:flex;border-top:1px solid #f1f5f9}
-.stat{flex:1;padding:.65rem .4rem;text-align:center;border-right:1px solid #f1f5f9}
-.stat:last-child{border-right:none}
+.stat{flex:1;padding:.65rem .4rem;text-align:center;border-right:1px solid #f1f5f9}.stat:last-child{border-right:none}
 .stat-val{font-size:1rem;font-weight:700;color:#1e293b}
-.stat-val.hi-fastest{color:#2563eb}
-.stat-val.hi-cheapest{color:#16a34a}
-.stat-val.hi-greenest{color:#059669}
+.stat-val.hi-fastest{color:#2563eb}.stat-val.hi-cheapest{color:#16a34a}.stat-val.hi-greenest{color:#059669}
 .stat-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-top:1px}
 .segments{padding:.75rem 1.1rem;border-top:1px solid #f1f5f9}
 .segment{display:flex;align-items:center;gap:.5rem;padding:.3rem 0;border-bottom:1px dashed #f1f5f9;font-size:.82rem}
 .segment:last-child{border-bottom:none}
 .seg-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
-.seg-icon.train{background:#dbeafe;color:#1d4ed8}
-.seg-icon.bus{background:#fef9c3;color:#a16207}
-.seg-icon.plane{background:#fce7f3;color:#be185d}
-.seg-info{flex:1}
-.seg-route{font-weight:600;color:#334155;font-size:.85rem}
-.seg-meta{color:#94a3b8;font-size:.75rem}
+.seg-icon.train{background:#dbeafe;color:#1d4ed8}.seg-icon.bus{background:#fef9c3;color:#a16207}.seg-icon.plane{background:#fce7f3;color:#be185d}
+.seg-info{flex:1}.seg-route{font-weight:600;color:#334155;font-size:.85rem}.seg-meta{color:#94a3b8;font-size:.75rem}
 .seg-stats{text-align:right;font-size:.75rem;color:#64748b;flex-shrink:0}
-/* CO2 chart */
 .co2-bar{background:white;border-radius:14px;border:1.5px solid #e2e8f0;padding:1.2rem 1.5rem;margin-bottom:1.5rem}
 .co2-bar h3{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-bottom:1rem}
 .co2-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}
@@ -74,35 +65,27 @@ header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#0ea5e9 100%);pa
 .co2-track{flex:1;height:12px;background:#f1f5f9;border-radius:99px;overflow:hidden}
 .co2-fill{height:100%;border-radius:99px;transition:width 1s ease}
 .co2-value{font-size:.8rem;font-weight:600;width:60px;text-align:right;color:#334155}
-/* Map */
 .map-section{background:white;border-radius:14px;border:1.5px solid #e2e8f0;overflow:hidden;margin-bottom:1.5rem}
 .map-title{padding:.9rem 1.2rem;font-weight:600;font-size:.9rem;border-bottom:1px solid #f1f5f9;color:#475569}
 #map{height:360px}
-/* Empty/loading states */
 .empty-state{text-align:center;padding:4rem 2rem;color:#94a3b8}
 .empty-state .icon{font-size:3rem;margin-bottom:1rem}
+.empty-hint{font-size:.8rem;color:#cbd5e1;margin-top:.5rem}
 .error-box{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;color:#b91c1c;margin-bottom:1rem}
-/* Onboarding modal */
 .overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:1000}
 .modal{background:white;border-radius:16px;padding:2rem;width:100%;max-width:440px;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
 .modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.1rem;color:#94a3b8;cursor:pointer}
-.step-dots{display:flex;gap:.5rem;margin-bottom:1rem}
-.step-dot{width:8px;height:8px;border-radius:50%;transition:background .2s}
-.modal h2{font-size:1.3rem;font-weight:700;margin-bottom:.25rem}
-.modal .sub{color:#64748b;font-size:.9rem;margin-bottom:1.5rem}
-.form-group{margin-bottom:1rem}
-.form-label{display:block;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-bottom:.4rem}
+.step-dots{display:flex;gap:.5rem;margin-bottom:1rem}.step-dot{width:8px;height:8px;border-radius:50%;transition:background .2s}
+.modal h2{font-size:1.3rem;font-weight:700;margin-bottom:.25rem}.modal .sub{color:#64748b;font-size:.9rem;margin-bottom:1.5rem}
+.form-group{margin-bottom:1rem;position:relative}.form-label{display:block;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-bottom:.4rem}
 .form-input{width:100%;padding:.65rem .9rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.95rem;color:#1e293b;background:white;font-family:inherit}
 .option-card{padding:.85rem 1rem;border-radius:10px;cursor:pointer;border:1.5px solid #e2e8f0;margin-bottom:.75rem;transition:border .15s,background .15s}
-.option-card.selected-blue{border:2px solid #2563eb;background:#eff6ff}
-.option-card.selected-green{border:2px solid #059669;background:#ecfdf5}
-.opt-title{font-weight:600;font-size:.9rem}
-.opt-desc{font-size:.8rem;color:#64748b;margin-top:2px}
+.option-card.selected-blue{border:2px solid #2563eb;background:#eff6ff}.option-card.selected-green{border:2px solid #059669;background:#ecfdf5}
+.opt-title{font-weight:600;font-size:.9rem}.opt-desc{font-size:.8rem;color:#64748b;margin-top:2px}
 .btn-row{display:flex;gap:.75rem;margin-top:1rem}
 .btn-primary{flex:1;padding:.7rem 1.5rem;background:linear-gradient(135deg,#2563eb,#0ea5e9);color:white;border:none;border-radius:8px;font-weight:600;font-size:.95rem;cursor:pointer}
 .btn-primary:disabled{opacity:.6;cursor:not-allowed}
 .btn-secondary{padding:.7rem 1.2rem;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-weight:600;font-size:.95rem;cursor:pointer}
-/* Footer */
 footer{text-align:center;padding:1.5rem;font-size:.75rem;color:#94a3b8;border-top:1px solid #e2e8f0;background:white;margin-top:1rem}
 </style>
 </head>
@@ -124,23 +107,21 @@ footer{text-align:center;padding:1.5rem;font-size:.75rem;color:#94a3b8;border-to
 
 <div class="search-panel">
   <div class="search-form">
-    <div class="field">
+    <div class="field" id="field-from">
       <label>From</label>
-      <select id="from" onchange="clearResults()">
-        <option value="">Select origin…</option>
-      </select>
+      <input type="text" id="from-input" placeholder="Type any city…" autocomplete="off" spellcheck="false" oninput="acInput('from',this.value)" onblur="acBlur('from')" onfocus="acFocus('from')"/>
+      <ul class="ac-dropdown" id="from-dropdown"></ul>
     </div>
-    <div class="field">
+    <div class="field" id="field-to">
       <label>To</label>
-      <select id="to" onchange="clearResults()">
-        <option value="">Select destination…</option>
-      </select>
+      <input type="text" id="to-input" placeholder="Type any city…" autocomplete="off" spellcheck="false" oninput="acInput('to',this.value)" onblur="acBlur('to')" onfocus="acFocus('to')"/>
+      <ul class="ac-dropdown" id="to-dropdown"></ul>
     </div>
     <div class="field" style="min-width:130px;max-width:160px">
       <label>Date</label>
       <input type="date" id="tdate" />
     </div>
-    <button class="search-btn" id="search-btn" onclick="search()">🔍 Find Routes</button>
+    <button class="search-btn" id="search-btn" onclick="search()" disabled>🔍 Find Routes</button>
   </div>
 </div>
 
@@ -148,7 +129,8 @@ footer{text-align:center;padding:1.5rem;font-size:.75rem;color:#94a3b8;border-to
   <div id="results">
     <div class="empty-state">
       <div class="icon">🚄</div>
-      <p>Select origin and destination to compare routes across Europe</p>
+      <p>Type any European city to compare multimodal routes</p>
+      <p class="empty-hint">Lyon → Honfleur, Paris → Berlin, and more</p>
     </div>
   </div>
 </div>
@@ -166,82 +148,195 @@ footer{text-align:center;padding:1.5rem;font-size:.75rem;color:#94a3b8;border-to
 
 <script>
 const API = 'https://routeiq-api.app.syit.fr'
+const PHOTON = 'https://photon.komoot.io/api/'
 const MODE_ICON = {train:'🚄', bus:'🚌', plane:'✈️'}
 const COLORS = {fastest:'#2563eb', cheapest:'#16a34a', greenest:'#059669'}
+const CITY_TYPES = new Set(['city','town','village','municipality','borough','suburb','district'])
 
 let cities = []
+let cityIndex = {}          // id → city object
 let selectedRoute = 'fastest'
 let currentResult = null
 let prefs = null
 
+// Autocomplete state for both fields
+const AC = {
+  from: {city: null, debounce: null, suggestions: []},
+  to:   {city: null, debounce: null, suggestions: []},
+}
+
 function fmtDur(m){if(m<60)return m+'min';return Math.floor(m/60)+'h'+(m%60?' '+(m%60)+'m':'')}
 function fmtPrice(e){return '€'+Math.round(e)}
 function fmtCo2(kg){return kg<1?(kg*1000).toFixed(0)+'g':kg.toFixed(1)+'kg'}
-function haversine(lat1,lon1,lat2,lon2){const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))}
+
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+}
+
+function snapToCity(lat, lon) {
+  let best = null, bestDist = Infinity
+  for (const c of cities) {
+    const d = haversine(lat, lon, c.lat, c.lon)
+    if (d < bestDist) { bestDist = d; best = c }
+  }
+  return {city: best, dist: bestDist}
+}
+
+// ── Autocomplete ──────────────────────────────────────────────────────
+async function photonSearch(q) {
+  try {
+    const res = await fetch(`${PHOTON}?q=${encodeURIComponent(q)}&limit=10&lang=en`)
+    const data = await res.json()
+    const results = []
+    const seen = new Set()
+    for (const f of data.features) {
+      const p = f.properties
+      if (p.osm_type === 'R' || CITY_TYPES.has(p.type) || p.osm_key === 'place') {
+        const name = p.name || ''; const country = p.country || ''
+        const key = name.toLowerCase() + '|' + country.toLowerCase()
+        if (seen.has(key) || !name) continue
+        seen.add(key)
+        results.push({name, country, state: p.state || '', lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0]})
+      }
+      if (results.length >= 6) break
+    }
+    return results
+  } catch { return [] }
+}
+
+function acInput(which, q) {
+  const ac = AC[which]
+  ac.city = null
+  updateSearchBtn()
+  if (q.length < 2) { hideDrop(which); return }
+  clearTimeout(ac.debounce)
+  ac.debounce = setTimeout(async () => {
+    const suggestions = await photonSearch(q)
+    ac.suggestions = suggestions
+    showDrop(which, suggestions)
+  }, 280)
+}
+
+function acFocus(which) {
+  if (AC[which].suggestions.length) showDrop(which, AC[which].suggestions)
+}
+
+function acBlur(which) {
+  // Delay so click on item fires first
+  setTimeout(() => hideDrop(which), 200)
+}
+
+function showDrop(which, suggestions) {
+  const dd = document.getElementById(which + '-dropdown')
+  if (!suggestions.length) { dd.classList.remove('open'); return }
+  dd.innerHTML = suggestions.map((c, i) =>
+    `<li class="ac-item" onmousedown="acSelect('${which}',${i})" onmouseover="this.classList.add('active')" onmouseout="this.classList.remove('active')">
+      <strong>${c.name}</strong>
+      <span>${c.state ? ' · ' + c.state : ''}${c.country ? ' · ' + c.country : ''}</span>
+    </li>`
+  ).join('')
+  dd.classList.add('open')
+}
+
+function hideDrop(which) {
+  document.getElementById(which + '-dropdown').classList.remove('open')
+}
+
+function acSelect(which, idx) {
+  const c = AC[which].suggestions[idx]
+  if (!c) return
+  AC[which].city = c
+  document.getElementById(which + '-input').value = c.name + (c.country ? ', ' + c.country : '')
+  hideDrop(which)
+  updateSearchBtn()
+}
+
+function updateSearchBtn() {
+  document.getElementById('search-btn').disabled = !(AC.from.city && AC.to.city)
+}
 
 // ── Init ──────────────────────────────────────────────────────────────
 async function init() {
-  // Load cities
   try {
     const res = await fetch(API + '/cities')
     cities = await res.json()
-    const opts = cities.map(c => `<option value="${c.id}">${c.name} (${c.country})</option>`).join('')
-    document.getElementById('from').innerHTML = '<option value="">Select origin…</option>' + opts
-    document.getElementById('to').innerHTML   = '<option value="">Select destination…</option>' + opts
-  } catch(e) {
-    console.error('Failed to load cities:', e)
-  }
+    cities.forEach(c => { cityIndex[c.id] = c })
+  } catch(e) { console.error('Failed to load cities:', e) }
 
-  // Date default
   const d = new Date(); d.setDate(d.getDate()+1)
   document.getElementById('tdate').value = d.toISOString().split('T')[0]
 
-  // Preferences
   try { prefs = JSON.parse(localStorage.getItem('routeiq_prefs') || 'null') } catch{}
-  if (prefs) {
-    applyPrefs(prefs)
-  } else {
-    openOnboarding()
-  }
+  if (prefs) { applyPrefs(prefs) } else { openOnboarding() }
 }
 
 function applyPrefs(p) {
   prefs = p
   const badge = document.getElementById('pref-badge')
-  if (p.home_city) {
-    badge.textContent = '👤 ' + p.home_city
-    badge.style.display = 'inline'
-    const fromSel = document.getElementById('from')
-    if (fromSel && !fromSel.value) fromSel.value = p.home_city
-  }
+  badge.textContent = '👤 ' + (p.email || p.home_city || '')
+  badge.style.display = 'inline'
 }
 
 // ── Search ────────────────────────────────────────────────────────────
 async function search() {
-  const from = document.getElementById('from').value
-  const to   = document.getElementById('to').value
-  if (!from || !to) { alert('Please select both origin and destination.'); return }
-  if (from === to) { alert('Origin and destination must be different.'); return }
+  const fromCity = AC.from.city
+  const toCity   = AC.to.city
+  if (!fromCity || !toCity) return
+
+  // Snap each to nearest graph node
+  const fromSnap = snapToCity(fromCity.lat, fromCity.lon)
+  const toSnap   = snapToCity(toCity.lat, toCity.lon)
+
+  if (!fromSnap.city || !toSnap.city) {
+    document.getElementById('results').innerHTML = '<div class="error-box">⚠️ Could not find nearby cities in our network.</div>'
+    return
+  }
 
   const btn = document.getElementById('search-btn')
   btn.disabled = true; btn.textContent = '…'
-
   clearResults()
+
   try {
-    const res = await fetch(`${API}/routes?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
-    if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Search failed') }
-    const data = await res.json()
-    currentResult = data
-    renderResults(data)
+    // Try new backend first (lat/lon params), fall back to slugs
+    let res = null
+    const newUrl = `${API}/routes?from_lat=${fromCity.lat}&from_lon=${fromCity.lon}&from_name=${encodeURIComponent(fromCity.name)}&to_lat=${toCity.lat}&to_lon=${toCity.lon}&to_name=${encodeURIComponent(toCity.name)}`
+    const oldUrl = `${API}/routes?from=${encodeURIComponent(fromSnap.city.id)}&to=${encodeURIComponent(toSnap.city.id)}`
+
+    res = await fetch(newUrl)
+    let data
+    if (res.ok) {
+      data = await res.json()
+      // If old backend returned error on lat/lon, it returns 422
+      if (data.detail) throw new Error(data.detail)
+    } else {
+      // Fallback to old slug-based API
+      res = await fetch(oldUrl)
+      if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Search failed') }
+      data = await res.json()
+      // Inject display names and last-mile info for old API compat
+      data.origin_name = fromCity.name
+      data.destination_name = toCity.name
+      if (fromSnap.dist > 20) {
+        data.last_mile_origin = {note: `~${Math.round(fromSnap.dist)} km from ${fromCity.name} to ${fromSnap.city.name} (local transport/car)`, city: fromSnap.city.name}
+      }
+      if (toSnap.dist > 20) {
+        data.last_mile_destination = {note: `~${Math.round(toSnap.dist)} km from ${toSnap.city.name} to ${toCity.name} (local transport/car)`, city: toSnap.city.name}
+      }
+    }
+    currentResult = {...data, _fromCity: fromCity, _toCity: toCity, _fromSnap: fromSnap, _toSnap: toSnap}
+    renderResults(currentResult)
   } catch(e) {
     document.getElementById('results').innerHTML = `<div class="error-box">⚠️ ${e.message}</div>`
   } finally {
     btn.disabled = false; btn.textContent = '🔍 Find Routes'
+    updateSearchBtn()
   }
 }
 
 function clearResults() {
-  document.getElementById('results').innerHTML = `<div class="empty-state"><div class="icon">🚄</div><p>Select origin and destination to compare routes across Europe</p></div>`
+  document.getElementById('results').innerHTML = `<div class="empty-state"><div class="icon">🚄</div><p>Searching routes…</p></div>`
   if (window._map) { window._map.remove(); window._map = null }
 }
 
@@ -251,15 +346,21 @@ function renderResults(data) {
   const date = document.getElementById('tdate').value
   const dateStr = date ? new Date(date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : ''
 
-  let html = `<div class="results-header">${origin_name} → ${destination_name}${dateStr?' · '+dateStr:''} · 3 route options</div>`
-  html += '<div class="results-grid">'
+  let html = `<div class="results-header">${origin_name} → ${destination_name}${dateStr?' · '+dateStr:''} · 3 route options compared</div>`
 
+  if (data.last_mile_origin) {
+    html += `<div class="last-mile">📍 <strong>Departure:</strong> ${data.last_mile_origin.note}</div>`
+  }
+  if (data.last_mile_destination) {
+    html += `<div class="last-mile">📍 <strong>Arrival:</strong> ${data.last_mile_destination.note}</div>`
+  }
+
+  html += '<div class="results-grid">'
   const types = [
     {key:'fastest',  icon:'⚡', label:'Fastest',  hiCls:'hi-fastest'},
     {key:'cheapest', icon:'💰', label:'Cheapest', hiCls:'hi-cheapest'},
     {key:'greenest', icon:'🌿', label:'Greenest', hiCls:'hi-greenest'},
   ]
-
   types.forEach(({key, icon, label, hiCls}) => {
     const route = routes[key]
     if (!route) {
@@ -282,7 +383,7 @@ function renderResults(data) {
       <div class="segments">`
     segments.forEach(seg => {
       html += `<div class="segment">
-        <div class="seg-icon ${seg.mode}">${MODE_ICON[seg.mode]}</div>
+        <div class="seg-icon ${seg.mode}">${MODE_ICON[seg.mode]||'🚐'}</div>
         <div class="seg-info">
           <div class="seg-route">${seg.from_name} → ${seg.to_name}</div>
           <div class="seg-meta">${seg.operator}</div>
@@ -294,10 +395,10 @@ function renderResults(data) {
   })
   html += '</div>'
 
-  // CO2 chart
-  const originCity = cities.find(c => c.id === data.origin)
-  const destCity   = cities.find(c => c.id === data.destination)
-  const distKm = (originCity && destCity) ? haversine(originCity.lat, originCity.lon, destCity.lat, destCity.lon) : 0
+  // CO2 chart — use actual geocoded coords for accurate distance
+  const fromCity = data._fromCity || {}
+  const toCity   = data._toCity   || {}
+  const distKm = (fromCity.lat && toCity.lat) ? haversine(fromCity.lat, fromCity.lon, toCity.lat, toCity.lon) : 0
   const carCo2 = distKm * 0.12, planeCo2 = distKm * 0.255
   const bars = []
   if (routes.fastest)  bars.push({label:'⚡ Fastest',  co2:routes.fastest.total_co2,  color:'#2563eb'})
@@ -321,9 +422,7 @@ function renderResults(data) {
 
 function selectCard(type) {
   selectedRoute = type
-  document.querySelectorAll('.route-card').forEach(c => {
-    c.className = 'route-card'
-  })
+  document.querySelectorAll('.route-card').forEach(c => { c.className = 'route-card' })
   const card = document.getElementById('card-' + type)
   if (card) card.classList.add('selected-' + type)
   updateMapLayer(type)
@@ -337,9 +436,6 @@ function initMap(data, routes) {
   const map = L.map('map')
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:10}).addTo(map)
   window._map = map
-
-  const cityIndex = {}
-  cities.forEach(c => { cityIndex[c.id] = c })
   mapLayers = {}
   const allLL = []
 
@@ -348,34 +444,38 @@ function initMap(data, routes) {
     const color = COLORS[type]
     const latlngs = []
     route.segments.forEach(seg => {
-      const f=cityIndex[seg.from], t=cityIndex[seg.to]
-      if(f) latlngs.push([f.lat,f.lon])
-      if(t) latlngs.push([t.lat,t.lon])
-      if(f) allLL.push([f.lat,f.lon])
-      if(t) allLL.push([t.lat,t.lon])
+      // New backend embeds lat/lon; old backend uses slug lookup
+      const fLat = seg.from_lat ?? cityIndex[seg.from]?.lat
+      const fLon = seg.from_lon ?? cityIndex[seg.from]?.lon
+      const tLat = seg.to_lat   ?? cityIndex[seg.to]?.lat
+      const tLon = seg.to_lon   ?? cityIndex[seg.to]?.lon
+      if (fLat) { latlngs.push([fLat,fLon]); allLL.push([fLat,fLon]) }
+      if (tLat) { latlngs.push([tLat,tLon]); allLL.push([tLat,tLon]) }
     })
     const layer = L.layerGroup()
     L.polyline(latlngs,{color,weight:4,opacity:.7}).addTo(layer)
     route.segments.forEach((seg,i) => {
-      if(i===0){const c=cityIndex[seg.from];if(c)L.circleMarker([c.lat,c.lon],{radius:8,color:'white',fillColor:color,fillOpacity:1,weight:2}).addTo(layer).bindPopup(seg.from_name)}
-      const c=cityIndex[seg.to];if(c)L.circleMarker([c.lat,c.lon],{radius:i===route.segments.length-1?9:6,color:'white',fillColor:color,fillOpacity:.9,weight:2}).addTo(layer).bindPopup(seg.to_name)
+      const fLat = seg.from_lat ?? cityIndex[seg.from]?.lat
+      const fLon = seg.from_lon ?? cityIndex[seg.from]?.lon
+      const tLat = seg.to_lat   ?? cityIndex[seg.to]?.lat
+      const tLon = seg.to_lon   ?? cityIndex[seg.to]?.lon
+      if (i===0 && fLat) L.circleMarker([fLat,fLon],{radius:8,color:'white',fillColor:color,fillOpacity:1,weight:2}).addTo(layer).bindPopup(seg.from_name)
+      if (tLat) L.circleMarker([tLat,tLon],{radius:i===route.segments.length-1?9:6,color:'white',fillColor:color,fillOpacity:.9,weight:2}).addTo(layer).bindPopup(seg.to_name)
     })
     mapLayers[type] = layer
   })
-
-  if (allLL.length) map.fitBounds(allLL, {padding:[30,30]})
+  if (allLL.length) map.fitBounds(allLL,{padding:[30,30]})
   updateMapLayer(selectedRoute)
 }
 
 function updateMapLayer(type) {
   if (!window._map) return
-  Object.entries(mapLayers).forEach(([t,l]) => {
-    if (t===type) l.addTo(window._map); else l.remove()
-  })
+  Object.entries(mapLayers).forEach(([t,l]) => { if(t===type) l.addTo(window._map); else l.remove() })
 }
 
 // ── Onboarding ────────────────────────────────────────────────────────
 let onbStep = 0
+let onbHomeCity = null  // {name, country, lat, lon}
 const STYLES = [
   {v:'fast',    l:'⚡ Speed first',   d:'Minimize travel time'},
   {v:'cheap',   l:'💰 Budget travel', d:'Find the lowest-cost option'},
@@ -388,10 +488,10 @@ const SENS = [
   {v:'high',   l:'High — I offset or avoid flying'},
 ]
 let onbForm = {email:'', home_city:'', travel_style:'balanced', carbon_sensitivity:'medium'}
+let onbAcSuggest = []
 
 function openOnboarding() {
-  onbStep = 0
-  onbForm = {email:'', home_city:'', travel_style:'balanced', carbon_sensitivity:'medium'}
+  onbStep = 0; onbForm = {email:'',home_city:'',travel_style:'balanced',carbon_sensitivity:'medium'}; onbHomeCity = null
   renderOnboarding()
   document.getElementById('onboarding-overlay').style.display = 'flex'
 }
@@ -401,35 +501,30 @@ function closeOnboarding() {
 
 function renderOnboarding() {
   const dots = document.getElementById('step-dots')
-  dots.innerHTML = [0,1,2].map(i => `<div class="step-dot" style="background:${i===onbStep?'#2563eb':'#e2e8f0'}"></div>`).join('')
-
-  const TITLES = ['Welcome to RouteIQ', 'Your travel style', 'Carbon sensitivity']
-  const SUBS = [
-    'Set up your preferences for smarter route recommendations.',
-    'How do you prioritise when choosing a route?',
-    'How important is reducing your carbon footprint?'
-  ]
-
+  dots.innerHTML = [0,1,2].map(i=>`<div class="step-dot" style="background:${i===onbStep?'#2563eb':'#e2e8f0'}"></div>`).join('')
+  const TITLES = ['Welcome to RouteIQ','Your travel style','Carbon sensitivity']
+  const SUBS = ['Set up your preferences for smarter route recommendations.','How do you prioritise when choosing a route?','How important is reducing your carbon footprint?']
   let html = `<h2>${TITLES[onbStep]}</h2><p class="sub">${SUBS[onbStep]}</p>`
-
-  if (onbStep === 0) {
-    const cityOpts = cities.map(c => `<option value="${c.id}"${onbForm.home_city===c.id?' selected':''}>${c.name} (${c.country})</option>`).join('')
+  if (onbStep===0) {
+    const canNext = onbForm.email && onbHomeCity
     html += `
       <div class="form-group"><label class="form-label">Email address</label>
-        <input class="form-input" type="email" value="${onbForm.email}" oninput="onbForm.email=this.value" placeholder="you@example.com"/></div>
-      <div class="form-group"><label class="form-label">Home city</label>
-        <select class="form-input" onchange="onbForm.home_city=this.value">
-          <option value="">Select your city…</option>${cityOpts}
-        </select></div>
-      <div class="btn-row"><button class="btn-primary" onclick="onbNext()" ${!onbForm.email||!onbForm.home_city?'disabled':''}>Next →</button></div>`
-  } else if (onbStep === 1) {
-    html += STYLES.map(s => `
+        <input class="form-input" type="email" id="onb-email" value="${onbForm.email}" oninput="onbForm.email=this.value;rerenderOnbNext()" placeholder="you@example.com"/></div>
+      <div class="form-group">
+        <label class="form-label">Home city</label>
+        <input class="form-input" type="text" id="onb-city-input" value="${onbHomeCity?onbHomeCity.name+(onbHomeCity.country?', '+onbHomeCity.country:''):''}"
+          oninput="onbAcCityInput(this.value)" onblur="setTimeout(()=>{document.getElementById('onb-city-dd').style.display='none'},200)" placeholder="Type your city…" autocomplete="off" spellcheck="false"/>
+        <ul id="onb-city-dd" style="position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:9999;list-style:none;padding:4px 0;display:none;max-height:200px;overflow-y:auto"></ul>
+      </div>
+      <div class="btn-row"><button class="btn-primary" id="onb-next-0" onclick="onbNext()" ${canNext?'':'disabled'}>Next →</button></div>`
+  } else if (onbStep===1) {
+    html += STYLES.map(s=>`
       <div class="option-card${onbForm.travel_style===s.v?' selected-blue':''}" onclick="onbForm.travel_style='${s.v}';renderOnboarding()">
         <div class="opt-title">${s.l}</div><div class="opt-desc">${s.d}</div>
       </div>`).join('')
     html += `<div class="btn-row"><button class="btn-secondary" onclick="onbStep=0;renderOnboarding()">← Back</button><button class="btn-primary" onclick="onbNext()">Next →</button></div>`
   } else {
-    html += SENS.map(s => `
+    html += SENS.map(s=>`
       <div class="option-card${onbForm.carbon_sensitivity===s.v?' selected-green':''}" onclick="onbForm.carbon_sensitivity='${s.v}';renderOnboarding()">
         <div class="opt-title">${s.l}</div>
       </div>`).join('')
@@ -437,36 +532,67 @@ function renderOnboarding() {
       <div class="btn-row"><button class="btn-secondary" onclick="onbStep=1;renderOnboarding()">← Back</button>
       <button class="btn-primary" id="onb-finish-btn" onclick="onbFinish()">Get started ✓</button></div>`
   }
-
   document.getElementById('modal-content').innerHTML = html
 }
 
+function rerenderOnbNext() {
+  const btn = document.getElementById('onb-next-0')
+  if (btn) btn.disabled = !(onbForm.email && onbHomeCity)
+}
+
+let _onbAcDebounce = null
+async function onbAcCityInput(q) {
+  onbHomeCity = null; rerenderOnbNext()
+  const dd = document.getElementById('onb-city-dd')
+  if (!dd) return
+  if (q.length < 2) { dd.style.display = 'none'; return }
+  clearTimeout(_onbAcDebounce)
+  _onbAcDebounce = setTimeout(async () => {
+    const suggestions = await photonSearch(q)
+    onbAcSuggest = suggestions
+    if (!suggestions.length) { dd.style.display = 'none'; return }
+    dd.innerHTML = suggestions.map((c,i) =>
+      `<li class="ac-item" onmousedown="onbSelectCity(${i})" style="padding:.5rem .9rem;cursor:pointer;font-size:.9rem;border-bottom:1px solid #f1f5f9" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+        <strong>${c.name}</strong><span style="color:#94a3b8;font-size:.82rem">${c.state?' · '+c.state:''}${c.country?' · '+c.country:''}</span>
+      </li>`).join('')
+    dd.style.display = 'block'
+  }, 280)
+}
+
+function onbSelectCity(idx) {
+  const c = onbAcSuggest[idx]
+  if (!c) return
+  onbHomeCity = c
+  const input = document.getElementById('onb-city-input')
+  if (input) input.value = c.name + (c.country ? ', ' + c.country : '')
+  const dd = document.getElementById('onb-city-dd')
+  if (dd) dd.style.display = 'none'
+  rerenderOnbNext()
+}
+
 function onbNext() {
-  if (onbStep === 0 && (!onbForm.email || !onbForm.home_city)) return
-  onbStep++
-  renderOnboarding()
+  if (onbStep===0 && (!onbForm.email||!onbHomeCity)) return
+  onbStep++; renderOnboarding()
 }
 
 async function onbFinish() {
   const btn = document.getElementById('onb-finish-btn')
   const err = document.getElementById('onb-error')
-  btn.disabled = true; btn.textContent = 'Saving…'
-  err.style.display = 'none'
+  btn.disabled=true; btn.textContent='Saving…'; err.style.display='none'
+
+  // Snap home city to nearest hub slug
+  const snap = snapToCity(onbHomeCity.lat, onbHomeCity.lon)
+  const payload = {...onbForm, home_city: snap.city ? snap.city.id : 'paris'}
 
   try {
-    const res = await fetch(API + '/onboarding', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(onbForm)
-    })
-    if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Save failed') }
-    localStorage.setItem('routeiq_prefs', JSON.stringify(onbForm))
-    applyPrefs(onbForm)
+    const res = await fetch(API+'/onboarding',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    if (!res.ok) { const e=await res.json(); throw new Error(e.detail||'Save failed') }
+    localStorage.setItem('routeiq_prefs', JSON.stringify({...payload, home_city_display: onbHomeCity.name, email: onbForm.email}))
+    applyPrefs({...payload, email: onbForm.email})
     closeOnboarding()
   } catch(e) {
-    err.textContent = e.message
-    err.style.display = 'block'
-    btn.disabled = false; btn.textContent = 'Get started ✓'
+    err.textContent=e.message; err.style.display='block'
+    btn.disabled=false; btn.textContent='Get started ✓'
   }
 }
 
